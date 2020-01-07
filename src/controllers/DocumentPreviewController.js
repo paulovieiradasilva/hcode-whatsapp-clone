@@ -1,7 +1,7 @@
 const pdfjs = require('pdfjs-dist');
 const path = require('path');
 
-pdfjs.GlobalWorkerOptions.workerSrc = path.resolve(__dirname, '../../dist/pdf.worker.bundle.js')
+pdfjs.GlobalWorkerOptions.workerSrc = path.resolve(__dirname, '../../dist/pdf.worker.bundle.js');
 
 export class DocumentPreviewController {
 
@@ -23,8 +23,14 @@ export class DocumentPreviewController {
                 case 'image/jpeg':
                 case 'image/jpg':
                 case 'image/gif':
-                    reader.onload = () => resolve({ src: reader.result, info: this._file.name });
-                    reader.onerror = (error) => reject(error);
+                    reader.onload = () => {
+                        resolve(
+                            { src: reader.result, info: this._file.name }
+                        );
+                    }
+                    reader.onerror = (error) => {
+                        reject(error);
+                    }
                     reader.readAsDataURL(this._file);
                     break;
 
@@ -37,8 +43,7 @@ export class DocumentPreviewController {
                             pdf.getPage(1).then(page => {
 
                                 let viewport = page.getViewport(1);
-
-                                let canvas = document.createRange('canvas');
+                                let canvas = document.createElement('canvas');
                                 let canvasContext = canvas.getContext('2d');
 
                                 canvas.width = viewport.width;
@@ -49,12 +54,12 @@ export class DocumentPreviewController {
                                     let _s = (pdf.numPages > 1) ? 's' : '';
                                     resolve({
                                         src: canvas.toDataURL('image/png'),
-                                        info: `${pdf.numPages}, paginas${_s}`
-                                    })
+                                        info: `${pdf.numPages} pagina${_s}`
+                                    });
 
                                 }).catch((error) => reject(error));
 
-                            }).catch(error => { });
+                            }).catch(error => reject(error));
 
                         }).catch((error) => reject(error));
 

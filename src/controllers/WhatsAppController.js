@@ -1,6 +1,9 @@
 import { Format } from '../utils/Format';
 import { CameraController } from './CameraController';
+import { MicrophoneController } from './MicrophoneController';
 import { DocumentPreviewController } from './DocumentPreviewController';
+import { Firebase } from '../utils/Firebase';
+
 
 export class WhatsAppController {
 
@@ -9,10 +12,24 @@ export class WhatsAppController {
 		/** */
 		this.timeout = 50
 
+		this._firebase = new Firebase();
+		this.initAuth();
 		this.elementsPrototype();
 		this.loadElements();
 		this.initEvents();
+	}
 
+	/** */
+	initAuth() {
+		this._firebase.initAuth().then((result) => {
+
+			console.log('response', result);
+
+		}).catch((error) => {
+
+			console.error(error);
+
+		});
 	}
 
 	/** */
@@ -290,11 +307,10 @@ export class WhatsAppController {
 
 			if (this.el.inputDocument.files.length) {
 
-				//this.el.panelDocumentPreview.css({ height: '1%' });
-
 				let file = this.el.inputDocument.files[0];
 
 				this._documentPreviewController = new DocumentPreviewController(file);
+
 				this._documentPreviewController.getPreviewData().then((data) => {
 
 					this.el.imgPanelDocumentPreview.src = data.src;
@@ -302,20 +318,16 @@ export class WhatsAppController {
 					this.el.imagePanelDocumentPreview.show();
 					this.el.filePanelDocumentPreview.hide();
 
-					//this.el.panelDocumentPreview.css({ height: 'calc(100% - 0px)' });
-
-				}).catch((error) => {
-
-					//this.el.panelDocumentPreview.css({ height: 'calc(100% - 0px)' });
+				}).catch(() => {
 
 					switch (file.type) {
-						case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
 						case 'application/msword':
+						case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
 							this.el.iconPanelDocumentPreview.classList.value = 'jcxhw icon-doc-doc';
 							break;
 
-						case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
 						case 'application/vnd.ms-excel':
+						case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
 							this.el.iconPanelDocumentPreview.classList.value = 'jcxhw icon-doc-xls';
 							break;
 
@@ -328,10 +340,9 @@ export class WhatsAppController {
 							this.el.iconPanelDocumentPreview.classList.value = 'jcxhw icon-doc-generic';
 					}
 
+					this.el.filenamePanelDocumentPreview.innerHTML = file.name;
 					this.el.filePanelDocumentPreview.show();
 					this.el.imagePanelDocumentPreview.hide();
-
-					this.el.filenamePanelDocumentPreview.innerHTML = file.name;
 
 				});
 			}
@@ -367,16 +378,29 @@ export class WhatsAppController {
 		this.el.btnSendMicrophone.on('click', () => {
 			this.el.recordMicrophone.show();
 			this.el.btnSendMicrophone.hide();
-			this.startRecordMicrophoneTime();
+
+			this._microphoneController = new MicrophoneController();
+
+			this._microphoneController.on('ready', (audio) => {
+				console.log('event ready');
+				this._microphoneController.startRecord();
+			});
+
+			this._microphoneController.on('recordtimer', (timer) => {
+				this.el.recordMicrophoneTimer.innerHTML = Format.toTime(timer);
+			});
+
 		});
 
 		/** */
 		this.el.btnCancelMicrophone.on('click', () => {
+			this._microphoneController.stopRecord();
 			this.closeRecordMicrophone();
 		});
 
 		/** */
 		this.el.btnFinishMicrophone.on('click', () => {
+			this._microphoneController.stopRecord();
 			this.closeRecordMicrophone();
 		});
 
@@ -473,18 +497,9 @@ export class WhatsAppController {
 	}
 
 	/** */
-	startRecordMicrophoneTime() {
-		let start = Date.now();
-		this._recordMicrophpneInterval = setInterval(() => {
-			this.el.recordMicrophoneTimer.innerHTML = Format.toTime((Date.now() - start));
-		}, 100);
-	}
-
-	/** */
 	closeRecordMicrophone() {
 		this.el.recordMicrophone.hide();
 		this.el.btnSendMicrophone.show();
-		clearInterval(this._recordMicrophpneInterval);
 	}
 
 	/** */
