@@ -1,5 +1,5 @@
-const firebase = require('@firebase/app').default;
-require('@firebase/firestore');
+const firebase = require ('firebase'); 
+require('firebase/firestore');
 
 export class Firebase {
 
@@ -33,7 +33,7 @@ export class Firebase {
     initAuth() {
         return new Promise((resolve, reject) => {
 
-            let provider = new Firebase.auth.GoogleAuthProvider();
+            let provider = new firebase.auth.GoogleAuthProvider();
 
             firebase.auth().signInWithPopup(provider).then((result) => {
                 let token = result.credential.accessToken;
