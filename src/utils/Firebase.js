@@ -1,5 +1,6 @@
-const firebase = require ('firebase'); 
+const firebase = require('firebase');
 require('firebase/firestore');
+
 
 export class Firebase {
 
@@ -21,11 +22,11 @@ export class Firebase {
 
     /** */
     init() {
-        if (!this._initialized) {
+        if (!window._initializedFirebase) {
             // Initialize Firebase
             firebase.initializeApp(this._config);
             firebase.firestore().settings({});
-            this._initialized = true;
+            window._initializedFirebase = true;
         }
     }
 
@@ -39,7 +40,7 @@ export class Firebase {
                 let token = result.credential.accessToken;
                 let user = result.user;
 
-                resolve(user, token);
+                resolve({ user, token });
 
             }).catch((error) => {
                 reject(error);
